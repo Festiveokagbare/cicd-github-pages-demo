@@ -1,108 +1,151 @@
-import { useState } from "react";
-import "./App.css";
+import React, { useState } from "react";
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Card,
+  CardContent,
+  Box,
+  Grid,
+} from "@mui/material";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 
-function App() {
-  const [products, setProducts] = useState([
-    { id: 1, name: "Rice (50kg)", price: 75000, stock: 12 },
-    { id: 2, name: "Beans (25kg)", price: 42000, stock: 8 },
-    { id: 3, name: "Cooking Oil", price: 18000, stock: 20 }
-  ]);
-
+export default function App() {
+  const [products, setProducts] = useState([]);
+  const [form, setForm] = useState({ name: "", price: "", stock: "" });
   const [search, setSearch] = useState("");
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [stock, setStock] = useState("");
 
-  const filteredProducts = products.filter(p =>
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const addProduct = () => {
+    if (!form.name || !form.price || !form.stock) return;
+    setProducts([...products, { ...form, id: Date.now() }]);
+    setForm({ name: "", price: "", stock: "" });
+  };
+
+  const deleteProduct = (id) => {
+    setProducts(products.filter((p) => p.id !== id));
+  };
+
+  const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const addProduct = () => {
-    if (!name || !price || !stock) return;
-
-    setProducts([
-      ...products,
-      {
-        id: Date.now(),
-        name,
-        price: Number(price),
-        stock: Number(stock)
-      }
-    ]);
-
-    setName("");
-    setPrice("");
-    setStock("");
-  };
+  const lowStockCount = products.filter((p) => Number(p.stock) < 5).length;
 
   return (
-    <div className="container">
-      <header className="header">
-        <h1>🛒 Store Keeper Dashboard</h1>
-        <p>Manage products and inventory</p>
-      </header>
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Box display="flex" alignItems="center" mb={3}>
+        <ShoppingCartIcon fontSize="large" sx={{ mr: 1 }} />
+        <Typography variant="h4">Store Keeper Dashboard</Typography>
+      </Box>
+      <Typography mb={4}>Manage products and inventory</Typography>
 
-      <section className="card">
-        <input
-          type="text"
-          placeholder="Search product..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
+      {/* Dashboard Cards */}
+      <Grid container spacing={2} mb={4}>
+        <Grid item xs={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6">Total Products</Typography>
+              <Typography variant="h4">{products.length}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6}>
+          <Card sx={{ bgcolor: lowStockCount ? "error.light" : "success.light" }}>
+            <CardContent>
+              <Typography variant="h6">Low Stock Alerts</Typography>
+              <Typography variant="h4">{lowStockCount}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Search */}
+      <TextField
+        label="Search product..."
+        fullWidth
+        margin="normal"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      {/* Add Product Form */}
+      <Box mb={4}>
+        <Typography variant="h6" mb={2}>
+          Add New Product
+        </Typography>
+        <TextField
+          label="Product Name"
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
         />
-      </section>
+        <TextField
+          label="Price"
+          name="price"
+          type="number"
+          value={form.price}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+        />
+        <TextField
+          label="Stock"
+          name="stock"
+          type="number"
+          value={form.stock}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+        />
+        <Button variant="contained" sx={{ mt: 2 }} onClick={addProduct}>
+          Add Product
+        </Button>
+      </Box>
 
-      <section className="card">
-        <h2>Add New Product</h2>
-        <div className="form">
-          <input
-            type="text"
-            placeholder="Product name"
-            value={name}
-            onChange={e => setName(e.target.value)}
-          />
-          <input
-            type="number"
-            placeholder="Price"
-            value={price}
-            onChange={e => setPrice(e.target.value)}
-          />
-          <input
-            type="number"
-            placeholder="Stock"
-            value={stock}
-            onChange={e => setStock(e.target.value)}
-          />
-          <button onClick={addProduct}>Add Product</button>
-        </div>
-      </section>
-
-      <section className="card">
-        <h2>Product List</h2>
-        {filteredProducts.length === 0 ? (
-          <p>No products found.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Price (₦)</th>
-                <th>Stock</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredProducts.map(p => (
-                <tr key={p.id}>
-                  <td>{p.name}</td>
-                  <td>{p.price.toLocaleString()}</td>
-                  <td>{p.stock}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-    </div>
+      {/* Product List Table */}
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Name</TableCell>
+            <TableCell>Price</TableCell>
+            <TableCell>Stock</TableCell>
+            <TableCell>Actions</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {filteredProducts.map((p) => (
+            <TableRow key={p.id}>
+              <TableCell>{p.name}</TableCell>
+              <TableCell>${p.price}</TableCell>
+              <TableCell>{p.stock}</TableCell>
+              <TableCell>
+                <Button color="error" onClick={() => deleteProduct(p.id)}>
+                  Delete
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+          {filteredProducts.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={4} align="center">
+                No products found
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </Container>
   );
 }
-
-export default App;
